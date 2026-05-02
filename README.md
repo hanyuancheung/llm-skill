@@ -99,3 +99,7 @@ See [`AGENT.md`](./AGENT.md) for the full contract.
 ## License
 
 Released under the [MIT License](./LICENSE).
+
+## Star History
+
+[![Star History Chart](https://api.star-history.com/chart?repos=hanyuancheung/llm-skill&type=date)](https://www.star-history.com/?repos=hanyuancheung%2Fllm-skill&type=date)

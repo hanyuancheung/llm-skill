@@ -99,3 +99,7 @@ bash .llm-skill/install.sh
 ## 许可证
 
 基于 [MIT License](./LICENSE) 发布。
+
+## Star 趋势
+
+[![Star History Chart](https://api.star-history.com/chart?repos=hanyuancheung/llm-skill&type=date)](https://www.star-history.com/?repos=hanyuancheung%2Fllm-skill&type=date)
