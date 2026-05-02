@@ -2,17 +2,9 @@
 
 > [English](./README.md) | 中文
 
-借鉴 Karpathy 的 **LLM-Wiki** 思想，为 LLM Agent 设计的最小三层 skill 系统：
+借鉴 Karpathy 的 **[LLM-Wiki](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f)** 思想，为 LLM Agent 设计的最小三层 skill 系统：
 
-```
-┌──────────────────────────────────────────────────┐
-│ Schema 层  →  AGENT.md（路由 + 契约）            │
-├──────────────────────────────────────────────────┤
-│ Wiki 层    →  skills/<name>/SKILL.md（经验包）   │
-├──────────────────────────────────────────────────┤
-│ Raw 层     →  对话 / 日志 / 痕迹（不入库）       │
-└──────────────────────────────────────────────────┘
-```
+![架构图](./asset/architecture_zh.png)
 
 ## 闭环
 
@@ -102,4 +94,4 @@ bash .llm-skill/install.sh
 
 ## 许可证
 
-MIT（或按项目需要）。
+基于 [MIT License](./LICENSE) 发布。

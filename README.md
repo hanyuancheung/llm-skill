@@ -2,17 +2,9 @@
 
 > English | [中文](./README_zh.md)
 
-A minimal three-layer skill system for LLM agents, inspired by Karpathy's **LLM-Wiki** idea:
+A minimal three-layer skill system for LLM agents, inspired by Karpathy's **[LLM-Wiki](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f)** idea:
 
-```
-┌──────────────────────────────────────────────────┐
-│ Schema layer  →  AGENT.md (routing + contract)   │
-├──────────────────────────────────────────────────┤
-│ Wiki layer    →  skills/<name>/SKILL.md (packs)  │
-├──────────────────────────────────────────────────┤
-│ Raw layer     →  chat / logs / traces (ephemeral)│
-└──────────────────────────────────────────────────┘
-```
+![Architecture](./asset/architecture_en.png)
 
 ## The closed loop
 
@@ -102,4 +94,4 @@ See [`AGENT.md`](./AGENT.md) for the full contract.
 
 ## License
 
-MIT (or project-appropriate).
+Released under the [MIT License](./LICENSE).
