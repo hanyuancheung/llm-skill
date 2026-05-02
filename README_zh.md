@@ -41,6 +41,10 @@ llm-skill/
     └── _template/   SKILL.md + SKILL_zh.md
 ```
 
+端到端流程示意（Execute → Distill → Guide，以新增 `review-go-pr` skill 为例）：
+
+![流程示意](./asset/pipeline_zh.png)
+
 ## 安装
 
 ### 方式一 — 独立仓库

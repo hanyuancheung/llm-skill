@@ -41,6 +41,10 @@ llm-skill/
     └── _template/   SKILL.md + SKILL_zh.md
 ```
 
+End-to-end pipeline (Execute → Distill → Guide, illustrated with a `review-go-pr` walkthrough):
+
+![Pipeline](./asset/pipeline_en.png)
+
 ## Install
 
 ### Option A — standalone repo
