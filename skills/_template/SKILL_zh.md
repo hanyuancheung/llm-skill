@@ -8,6 +8,18 @@ triggers:
 dependencies: []
 owner: <fill-me>
 updated: <YYYY-MM-DD>
+hooks:
+  # 可选。不用的阶段整段删除即可。
+  # 默认的 `should-distill` post-hook 对所有 skill 自动生效，无需在此声明。
+  pre: []
+  # - name: needs-go
+  #   when: "目标语言是 Go"
+  #   action: warn                  # skip | warn | proceed
+  post: []
+  # - name: run-unit-tests
+  #   when: "源文件有改动"
+  #   action: run-script:hooks/post.sh
+  on_error: []
 ---
 
 # <skill-name> — <一句话定位>

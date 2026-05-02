@@ -8,6 +8,18 @@ triggers:
 dependencies: []
 owner: <fill-me>
 updated: <YYYY-MM-DD>
+hooks:
+  # Optional. Remove a phase entirely if unused.
+  # The default `should-distill` post-hook is always active; no need to declare.
+  pre: []
+  # - name: needs-go
+  #   when: "target language is Go"
+  #   action: warn                  # skip | warn | proceed
+  post: []
+  # - name: run-unit-tests
+  #   when: "source files changed"
+  #   action: run-script:hooks/post.sh
+  on_error: []
 ---
 
 # <skill-name> — <one-line positioning>

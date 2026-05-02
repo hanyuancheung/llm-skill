@@ -7,6 +7,26 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) · SemVer.
 
 ---
 
+## [0.3.0] — 2026-05-01
+
+### Added
+- **Hook protocol** (`AGENT.md` §10): three phases `pre` / `post` / `on_error`, with action whitelist `proceed / skip / warn / propose-distill / propose-guide / require-validator / run-script:<relpath>`.
+- **Default post-hook `should-distill`** — applies to every skill automatically, guaranteeing that every task end evaluates whether `distill` must be invoked.
+- Hook declarations on meta-skills:
+  - `distill`: `pre.have-candidates` (skip), `post.propose-guide`, `post.validate-skills`.
+  - `guide`: `post.validate-after-guide`.
+- Updated `skills/_template/` to showcase the `hooks:` front-matter block.
+
+### Changed
+- `execute` SOP upgraded to 9 steps interleaved with pre/post/on_error hook evaluation.
+- `scripts/validate.py` rewritten with an indent-based YAML-subset parser supporting lists of mappings (needed for `hooks`). New checks:
+  - `hooks` phase whitelist and entry shape (`name` + `action` required)
+  - `skip` restricted to `pre`; `propose-*` / `require-validator` restricted to non-`pre`
+  - `run-script:<path>` target must exist, be executable, and live inside the skill dir (path-escape guard)
+- All meta-skills bumped to `v0.2.0`.
+
+---
+
 ## [0.2.0] — 2026-05-01
 
 ### Added

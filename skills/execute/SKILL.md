@@ -1,6 +1,6 @@
 ---
 name: execute
-version: 0.1.0
+version: 0.2.0
 status: active
 triggers:
   keywords: [execute, run task, implement, fix bug, debug, do it]
@@ -10,6 +10,10 @@ triggers:
 dependencies: [guide]
 owner: agent
 updated: 2026-05-01
+hooks:
+  pre: []
+  post: []
+  on_error: []
 ---
 
 # execute — Execution Meta-Skill
@@ -36,10 +40,17 @@ Select the right domain skill from the `AGENT.md` routing table, complete the ta
 3. **Lazy load.**
    `read_file` only the chosen `SKILL.md`. If it links to `references/*.md`, load on demand.
 
-4. **Execute the task.**
+4. **Run `pre` hooks** (see `AGENT.md` §10).
+   For each hook in declared order, evaluate `when`; apply `action`:
+   - `skip` → drop this skill silently, try next candidate.
+   - `warn` → surface to user, continue.
+   - `proceed` → continue.
+   - `run-script:<path>` → execute; non-zero exit = violation, treat as hook failure.
+
+5. **Execute the task.**
    Follow the chosen skill's `How` section strictly. If a skill conflicts with user intent, **user wins**, and log the conflict into distill-candidates.
 
-5. **Collect distillable signals (key).**
+6. **Collect distillable signals (key).**
    Maintain a `distill-candidates` list during execution. Log entries for:
    - **New pitfall**: an error/ambiguity the skill did not warn about.
    - **Better practice**: a superior approach beyond what is recorded.
@@ -47,10 +58,16 @@ Select the right domain skill from the `AGENT.md` routing table, complete the ta
    - **Conflict**: skill-vs-skill or skill-vs-reality.
    - **Correction**: a step in the skill turned out to be inaccurate.
 
-6. **Closing report.**
+7. **Run `post` hooks before finishing** (see `AGENT.md` §10.4–§10.5).
+   - **Always** evaluate the default `should-distill`: if `distill-candidates` is non-empty, propose invoking `distill`.
+   - Then run declared `post` hooks in order. Enforce `require-validator` strictly: a failing `scripts/validate.py` blocks the task report.
+
+8. **Closing report.**
    - Deliver results.
-   - If `distill-candidates` is non-empty and worth "would reuse next time", **proactively** ask: "I found X worth distilling — enter distill?"
-   - Drop if rejected; otherwise hand off to `distill`.
+   - Summarise every hook that fired (name + outcome).
+   - If hooks proposed `distill` / `guide` and the user agrees, hand off accordingly.
+
+9. **On error** — if any step above raises, run `on_error` hooks before surfacing the failure.
 
 ## Examples
 
@@ -76,6 +93,9 @@ User: Help me debug a CUDA OOM
 - **P1**: Greedy loading burns context → strict ≤ 3 candidates.
 - **P2**: Forgetting to log signals mid-flight → treat "logging" as first-class, equal to code edits.
 - **P3**: Editing a skill in place → Execute is **read-only** on skills; writing belongs to `distill`.
+- **P4**: Skipping the default `should-distill` post-hook because "nothing big happened" → evaluate honestly every time; silent skipping is forbidden by §10.4.
+- **P5**: Treating `warn` as `skip` → `warn` must still proceed; only `skip` aborts.
 
 ## Changelog
+- 2026-05-01 v0.2.0 — added hook phases (pre/post/on_error) to the SOP; enforce default `should-distill`.
 - 2026-05-01 v0.1.0 — Initial release.

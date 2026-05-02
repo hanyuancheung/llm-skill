@@ -1,6 +1,6 @@
 ---
 name: distill
-version: 0.1.0
+version: 0.2.0
 status: active
 triggers:
   keywords: [distill, retrospective, remember this, always do this, summarize, write a skill]
@@ -11,6 +11,19 @@ triggers:
 dependencies: [guide]
 owner: agent
 updated: 2026-05-01
+hooks:
+  pre:
+    - name: have-candidates
+      when: "distill-candidates list is empty"
+      action: skip
+  post:
+    - name: propose-guide
+      when: "any SKILL.md was created, merged, or deprecated"
+      action: propose-guide
+    - name: validate-skills
+      when: "any skill front-matter was modified"
+      action: require-validator
+  on_error: []
 ---
 
 # distill — Distillation Meta-Skill
@@ -110,4 +123,5 @@ triggers:
 - **P4**: Forgetting to bump version + Changelog → final check before saving.
 
 ## Changelog
+- 2026-05-01 v0.2.0 — declared `pre.have-candidates` (skip if nothing to distill), `post.propose-guide`, `post.validate-skills`.
 - 2026-05-01 v0.1.0 — Initial release: four-phase SOP and quality bar.

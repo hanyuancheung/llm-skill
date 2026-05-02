@@ -1,6 +1,6 @@
 ---
 name: distill
-version: 0.1.0
+version: 0.2.0
 status: active
 triggers:
   keywords: [沉淀, 复盘, 记住这个, 以后都这么做, 总结经验, 写成 skill]
@@ -11,6 +11,19 @@ triggers:
 dependencies: [guide]
 owner: agent
 updated: 2026-05-01
+hooks:
+  pre:
+    - name: have-candidates
+      when: "distill-candidates 列表为空"
+      action: skip
+  post:
+    - name: propose-guide
+      when: "存在 SKILL.md 的新建/合并/弃用"
+      action: propose-guide
+    - name: validate-skills
+      when: "有任何 skill 的 front-matter 被修改"
+      action: require-validator
+  on_error: []
 ---
 
 # distill — 沉淀层元技能
@@ -110,4 +123,5 @@ triggers:
 - **P4**：忘了升版本号和 Changelog → 每次写入 SKILL.md 前最后检查这两项。
 
 ## Changelog
+- 2026-05-01 v0.2.0 — 声明 `pre.have-candidates`（无候选则跳过）、`post.propose-guide`、`post.validate-skills`。
 - 2026-05-01 v0.1.0 — 初版，定义四相 SOP 与质量准则。

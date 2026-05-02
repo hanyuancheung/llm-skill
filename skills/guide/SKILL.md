@@ -1,6 +1,6 @@
 ---
 name: guide
-version: 0.1.0
+version: 0.2.0
 status: active
 triggers:
   keywords: [update AGENT, routing, organize skills, register skill, skill index]
@@ -10,6 +10,13 @@ triggers:
 dependencies: []
 owner: agent
 updated: 2026-05-01
+hooks:
+  pre: []
+  post:
+    - name: validate-after-guide
+      when: "AGENT.md was modified"
+      action: require-validator
+  on_error: []
 ---
 
 # guide — Guidance Meta-Skill
@@ -89,4 +96,5 @@ If a skill has weak `triggers` (never matches), **reverse-suggest** distill to r
 - **P4**: Guide becoming "another big index" → registry holds minimal routing info only, not descriptions.
 
 ## Changelog
+- 2026-05-01 v0.2.0 — declared `post.validate-after-guide` (AGENT.md edits must pass the validator).
 - 2026-05-01 v0.1.0 — Initial release.

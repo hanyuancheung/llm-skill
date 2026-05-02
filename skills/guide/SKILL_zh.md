@@ -1,6 +1,6 @@
 ---
 name: guide
-version: 0.1.0
+version: 0.2.0
 status: active
 triggers:
   keywords: [更新 AGENT, 路由, 整理 skill, 注册 skill, skill 目录]
@@ -10,6 +10,13 @@ triggers:
 dependencies: []
 owner: agent
 updated: 2026-05-01
+hooks:
+  pre: []
+  post:
+    - name: validate-after-guide
+      when: "AGENT.md 被修改"
+      action: require-validator
+  on_error: []
 ---
 
 # guide — 指引层元技能
@@ -90,4 +97,5 @@ ls skills/*/SKILL.md
 - **P4**：把 guide 变成"另一个大目录" → 注册表只记最小路由信息，不记描述细节。
 
 ## Changelog
+- 2026-05-01 v0.2.0 — 声明 `post.validate-after-guide`（AGENT.md 变更必须通过 validator）。
 - 2026-05-01 v0.1.0 — 初版。

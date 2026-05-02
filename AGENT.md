@@ -78,6 +78,10 @@ triggers:
 dependencies: []                 # other skill names this depends on
 owner: <human or agent>
 updated: <YYYY-MM-DD>
+hooks:                           # optional; see §10 Hook protocol
+  pre: []
+  post: []
+  on_error: []
 ---
 ```
 
@@ -126,13 +130,15 @@ At the start of every task the agent MUST:
 1. **Read only §2 of this file** (routing table). Do NOT batch-read all `SKILL.md` files.
 2. Match `triggers` against user input; select up to **3** candidates.
 3. Lazy-load only the chosen `SKILL.md`; expand `references/` on demand.
-4. Execute. While executing, maintain a `distill-candidates` list (mental or written) for:
+4. **Run `pre` hooks** (see §10). If any hook resolves to `skip`, drop this skill before executing its `How`. If `warn`, proceed but surface the warning.
+5. Execute the skill's `How`. While executing, maintain a `distill-candidates` list (mental or written) for:
    - new pitfalls
    - better practices
    - gaps (no skill hit)
    - conflicts
    - corrections
-5. At the end, if `distill-candidates` is non-empty and reusable, **proactively** propose invoking `distill`.
+6. **Before declaring the task done, run `post` hooks** (see §10). The default post-hook (`should-distill`) is always active: if `distill-candidates` is non-empty, propose invoking `distill`. Skill-declared post-hooks run in declared order.
+7. If an error is raised anywhere above, run `on_error` hooks (see §10) before surfacing the failure.
 
 ---
 
@@ -150,6 +156,7 @@ At the start of every task the agent MUST:
 
 - 2026-05-01 v0.1.0 — bootstrapped the Execute-Distill-Guide loop and skill contract.
 - 2026-05-01 v0.2.0 — bilingual SKILL files; added AGENTS/CLAUDE/HERMES entrypoints.
+- 2026-05-01 v0.3.0 — introduced Hook protocol (§10) with `pre`/`post`/`on_error` phases and default `should-distill` post-hook.
 
 ---
 
@@ -174,3 +181,95 @@ All entrypoints MUST defer concrete routing/contract rules to this file, and MUS
 - `SKILL.md` 为英文默认版本；中文镜像保存为 `SKILL_zh.md`，front-matter 与英文版完全一致。
 - `AGENTS.md` / `CLAUDE.md` / `HERMES.md` 是不同 Agent 运行时的入口薄壳，最终都回指本文件。
 - 新增领域 skill 只需：(a) 从 `skills/_template/` 复制目录；(b) 填写 `SKILL.md`（及 `SKILL_zh.md`）；(c) 在 §2.2 追加一行。
+- Hook 协议（§10）允许 skill 声明执行前/后/出错时的判定与动作；其中默认的 `should-distill` post-hook 对所有 skill 自动生效，**保证每次任务结束前都会判断是否需要走 distill**。
+
+---
+
+## 10. Hook protocol
+
+Hooks let a skill declare checks that **must** fire at specific lifecycle moments.
+They are the mechanism that answers "before I finish, do I still need to do something?"
+
+### 10.1 Phases
+
+| Phase | When it fires | Typical purpose |
+|---|---|---|
+| `pre` | After the skill is routed-in, **before** its `How` runs | Guard conditions; decide `skip` / `warn` / `proceed` |
+| `post` | **Before** Execute declares the task done | Distill judgement, validator runs, side-effect checks |
+| `on_error` | If any step raises / user aborts | Cleanup, rollback, log extraction |
+
+### 10.2 Declaration shape (inside front-matter)
+
+```yaml
+hooks:
+  pre:
+    - name: needs-go-toolchain
+      when: "target language is Go"
+      action: warn                       # skip | warn | proceed
+  post:
+    - name: should-distill               # conventional name
+      when: "distill-candidates is non-empty"
+      action: propose-distill
+    - name: run-validator
+      when: "any skill file was modified"
+      action: require-validator
+    - name: custom-check
+      when: "always"
+      action: run-script:hooks/post.sh
+  on_error:
+    - name: cleanup
+      action: run-script:hooks/on_error.sh
+```
+
+Every hook entry MUST have `name` and `action`. `when` is a free-form human-readable predicate the agent evaluates; if omitted it defaults to `"always"`.
+
+### 10.3 Built-in actions (agent-native; no script needed)
+
+| Action | Semantics |
+|---|---|
+| `proceed` | Continue (no-op; default). |
+| `skip` | Abort this skill's `How` without error. Only valid in `pre`. |
+| `warn` | Continue but surface a warning to the user. |
+| `propose-distill` | At the end, propose invoking `distill` skill. |
+| `propose-guide` | At the end, propose invoking `guide` skill. |
+| `require-validator` | Before finishing, run `scripts/validate.py`; non-zero exit blocks the report. |
+| `run-script:<relpath>` | Execute `<relpath>` (relative to the skill dir); non-zero exit = hook violated. |
+
+### 10.4 Default hooks (apply to every skill, no declaration required)
+
+```yaml
+post:
+  - name: should-distill
+    when: "distill-candidates is non-empty"
+    action: propose-distill
+```
+
+Skills MAY re-declare `should-distill` to customise its `when`, but MUST NOT weaken it to `proceed` or remove it entirely.
+
+### 10.5 Execution order
+
+1. All declared `pre` hooks run in declared order.
+2. Any `pre` hook resolving to `skip` → abort skill immediately (subsequent `pre`/`How`/`post` do NOT run; `on_error` does NOT fire because this is not an error).
+3. `How` runs.
+4. **Default `should-distill` runs first**, then each declared `post` hook in order.
+5. If any step from 1–4 raises, `on_error` hooks run, then the error propagates.
+
+### 10.6 Evaluation contract for the agent
+
+For each hook, the agent MUST:
+- Print the hook `name` and chosen branch (`triggered` / `not-triggered`) to the task log.
+- For `run-script:*`, verify the script exists and is executable; otherwise fail with a clear message.
+- For `require-validator`, run `python3 scripts/validate.py` from the repo root.
+- Never silently swallow a triggered hook.
+
+### 10.7 Relation to meta-skills
+
+- **Execute** is the only phase that **runs** hooks.
+- **Distill** is the only phase that may **write** `hooks:` into a skill's front-matter.
+- **Guide** checks hook-set consistency but does not modify them.
+
+### 10.8 Pitfalls
+
+- ❌ Using `pre.skip` for things that should just be a narrower `triggers` — prefer fixing triggers.
+- ❌ Side-effectful scripts with no idempotency — `post` can run multiple times during debugging.
+- ❌ Silencing `should-distill` to avoid "nagging" — that defeats the point of the loop.
